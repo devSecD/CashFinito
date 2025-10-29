@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  # Laravel Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cashfinito-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/var/www/html
+      - ./docker/php/php.ini:/usr/local/etc/php/php.ini
+    environment:
+      - DB_HOST=database
+      - DB_PORT=5432
+      - DB_DATABASE=cashfinito
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=password
+      - REDIS_HOST=redis
+    depends_on:
+      - database
+      - redis
+    networks:
+      - cashfinito-network
+
+  # Vue.js Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: cashfinito-frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:8000/api
+    depends_on:
+      - backend
+    networks:
+      - cashfinito-network
+
+  # PostgreSQL Database
+  database:
+    image: postgres:17
+    container_name: cashfinito-database
+    environment:
+      - POSTGRES_DB=cashfinito
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - cashfinito-network
+
+  # Redis para Cache y Queues
+  redis:
+    image: redis:7-alpine
+    container_name: cashfinito-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - cashfinito-network
+
+  # PGAdmin (Opcional - para gestión de DB)
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: cashfinito-pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@cashfinito.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    ports:
+      - "8080:80"
+    depends_on:
+      - database
+    networks:
+      - cashfinito-network
+
+volumes:
+  postgres_data:
+
+networks:
+  cashfinito-network:
+    driver: bridge
