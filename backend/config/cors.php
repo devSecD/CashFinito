@@ -1,11 +1,22 @@
-// config/cors.php
-'paths' => ['api/*', 'sanctum/csrf-cookie'],
-'allowed_methods' => ['*'],
-'allowed_origins' => ['http://localhost:3000'], // Vue dev server
-'allowed_headers' => ['*'],
+<?php
 
-// config/sanctum.php
-'stateful' => explode(',', env('SANCTUM_STATEFUL_DOMAINS', 'localhost,127.0.0.1')),
+return [
+    'paths' => ['api/*', 'sanctum/csrf-cookie'],
 
-// .env
-SANCTUM_STATEFUL_DOMAINS=localhost:3000,127.0.0.1:3000
+    'allowed_methods' => ['*'],
+
+    'allowed_origins' => [
+        'http://localhost:3000',
+        'http://localhost:5173',
+    ],
+
+    'allowed_origins_patterns' => [],
+
+    'allowed_headers' => ['*'],
+
+    'exposed_headers' => [],
+
+    'max_age' => 0,
+
+    'supports_credentials' => true,
+];

@@ -17,6 +17,9 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 # Instalar extensiones de PHP
 RUN docker-php-ext-install pdo_pgsql pgsql mbstring exif pcntl bcmath gd
 
+# Instalar Redis extension
+RUN pecl install redis && docker-php-ext-enable redis
+
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
@@ -27,14 +30,14 @@ WORKDIR /var/www/html
 COPY composer.json composer.lock ./
 
 # Instalar dependencias de PHP (sin dev para producción)
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction
 
 # Copiar código de la aplicación
 COPY . .
 
 # Configurar permisos
 RUN chown -R www-data:www-data /var/www/html/storage
-RUN chown -R www-data:www/www-data /var/www/html/bootstrap/cache
+RUN chown -R www-data:www-data /var/www/html/bootstrap/cache
 
 # Exponer puerto
 EXPOSE 8000
