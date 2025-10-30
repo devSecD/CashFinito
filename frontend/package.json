@@ -9,7 +9,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview", 
+    "lint": "eslint . --ext .vue,.js,.jsx --fix",
+    "lint:check": "eslint . --ext .vue,.js,.jsx"
   },
   "dependencies": {
     "@tailwindcss/forms": "^0.5.10",
@@ -21,8 +23,12 @@
     "vue-chartjs": "^5.3.2"
   },
   "devDependencies": {
+    "@eslint/js": "^9.38.0",
     "@vitejs/plugin-vue": "^6.0.1",
     "autoprefixer": "^10.4.21",
+    "eslint": "^9.38.0",
+    "eslint-plugin-vue": "^10.5.1",
+    "globals": "^16.4.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.16",
     "vite": "^7.1.11",
