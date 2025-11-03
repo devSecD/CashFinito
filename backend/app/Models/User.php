@@ -2,47 +2,103 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
         'name',
         'email',
         'password',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
+
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+    ];
+
     /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
+     * Relación: Un usuario tiene una configuración.
      */
-    protected function casts(): array
+    public function setting()
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return $this->hasOne(UserSetting::class);
+    }
+
+    /**
+     * Relación: Un usuario tiene muchas categorías personalizadas.
+     */
+    public function categories()
+    {
+        return $this->hasMany(Category::class);
+    }
+
+    /**
+     * Relación: Un usuario tiene muchas transacciones.
+     */
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class);
+    }
+
+    /**
+     * Relación: Un usuario tiene muchos presupuestos.
+     */
+    public function budgets()
+    {
+        return $this->hasMany(Budget::class);
+    }
+
+    /**
+     * Método auxiliar: Obtener todas las categorías disponibles para el usuario
+     * (sistema + personalizadas).
+     */
+    public function availableCategories()
+    {
+        return Category::where(function($query ){
+            $query->where('is_system', true)
+                ->orWhere('user_id', $this->id);
+        })->get();
+    }
+
+    /**
+     * Método  auxiliar: Balance actual del usuario.
+     */
+    public function getCurrentBalance()
+    {
+        $income = $this->transactions()->where('type', 'income')->sum('amount');
+        $expense = $this->transactions()->where('type', 'expense')->sum('amount');
+        return $income - $expense;
+    }
+
+    /**
+     * Método auxiliar: Balance del mes actual.
+     */
+    public function getCurrentMonthBalance()
+    {
+        $income = $this->transactions()
+            ->where('type', 'income')
+            ->whereMonth('transaction_date', now()->month)
+            ->whereYear('transaction_date', now()->year)
+            ->sum('amount');
+
+        $expense = $this->transactions()
+            ->where('type', 'expense')
+            ->whereMonth('transaction_date', now()->month)
+            ->whereYear('transaction_date', now()->year)
+            ->sum('amount');
+
+        return $income - $expense;
     }
 }
