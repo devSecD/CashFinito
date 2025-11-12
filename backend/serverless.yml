@@ -1,0 +1,78 @@
+service: cashfinito-api
+
+# Set your team ID if you are using Bref Cloud
+#bref:
+#    team: my-team-id
+
+provider:
+    name: aws
+    region: us-east-1
+    stage: production
+    runtime: php-83
+    environment:
+        APP_ENV: production
+        APP_DEBUG: false
+        LOG_CHANNEL: stderr
+        DB_CONNECTION: pgsql
+        DB_HOST: ${env:DB_HOST}
+        DB_PORT: ${env:DB_PORT}
+        DB_DATABASE: ${env:DB_DATABASE}
+        DB_USERNAME: ${env:DB_USERNAME}
+        DB_PASSWORD: ${env:DB_PASSWORD}
+        SESSION_DRIVER: cookie
+        CACHE_DRIVER: array
+        QUEUE_CONNECTION: sync
+        DB_SSLMODE: require
+    vpc:
+        securityGroupIds:
+            - ${env:SG_LAMBDA} # agregar al env
+        subnetIds:
+            - ${env:SUBNET_PRIVATE_1A}
+            - ${env:SUBNET_PRIVATE_1B}
+
+package:
+    # Files and directories to exclude from deployment
+    patterns:
+        - '!node_modules/**'
+        - '!public/storage'
+        - '!resources/assets/**'
+        - '!resources/css/**'
+        - '!resources/images/**'
+        - '!resources/js/**'
+        - '!storage/**'
+        - '!tests/**'
+        - '!database/*.sqlite'
+        - '!.git/**'
+        # Exclude assets except for the manifest file
+        - '!public/build/**'
+        - 'public/build/manifest.json'
+        - 'php/**'
+
+functions:
+    # This function runs the Laravel website/API
+    web:
+        handler: public/index.php
+        timeout: 28 # in seconds (API Gateway has a timeout of 29 seconds)
+        layers:
+            - ${bref:layer.php-83-fpm}
+        events:
+            - httpApi: '*'
+
+    # This function lets us run artisan commands in Lambda
+    artisan:
+        handler: artisan
+        timeout: 120 # in seconds
+        layers:
+            - ${bref:layer.php-83-fpm}      # ← Capa base de PHP con extensiones
+            - ${bref:layer.console}      # ← Capa de consola
+
+plugins:
+    # We need to include the Bref plugin
+    - ./vendor/bref/bref
+    - serverless-lift
+
+custom:
+    lift:
+        constructs:
+            storage:
+                type: storage
