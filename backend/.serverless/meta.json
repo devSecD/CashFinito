@@ -1,0 +1,581 @@
+{
+  "C:\\laragon\\www\\cash-finito\\backend\\serverless.yml": {
+    "versionFramework": "4.23.0",
+    "servicePath": "C:\\laragon\\www\\cash-finito\\backend\\serverless.yml",
+    "serviceConfigFileName": "serverless.yml",
+    "service": {
+      "service": "cashfinito-api",
+      "provider": {
+        "name": "aws",
+        "region": "us-east-1",
+        "stage": "production",
+        "runtime": "php-83",
+        "environment": {
+          "APP_ENV": "production",
+          "APP_DEBUG": "false",
+          "LOG_CHANNEL": "stderr",
+          "DB_CONNECTION": "pgsql",
+          "DB_HOST": "cashfinito-db.cczsy86o4obw.us-east-1.rds.amazonaws.com",
+          "DB_PORT": "5432",
+          "DB_DATABASE": "cashfinito",
+          "DB_USERNAME": "cashfinito_admin",
+          "DB_PASSWORD": "<REDACTED>",
+          "SESSION_DRIVER": "cookie",
+          "CACHE_DRIVER": "array",
+          "QUEUE_CONNECTION": "sync",
+          "DB_SSLMODE": "require"
+        },
+        "vpc": {
+          "securityGroupIds": [
+            "sg-086c7f561e12c80c9"
+          ],
+          "subnetIds": [
+            "subnet-0b157b83411316b98",
+            "subnet-0e6a86abea27530db"
+          ]
+        },
+        "versionFunctions": true,
+        "deploymentMethod": "direct"
+      },
+      "package": {
+        "patterns": [
+          "!node_modules/**",
+          "!public/storage",
+          "!resources/assets/**",
+          "!resources/css/**",
+          "!resources/images/**",
+          "!resources/js/**",
+          "!storage/**",
+          "!tests/**",
+          "!database/*.sqlite",
+          "!.git/**",
+          "!public/build/**",
+          "public/build/manifest.json",
+          "php/**"
+        ],
+        "artifactsS3KeyDirname": "serverless/cashfinito-api/production/code-artifacts"
+      },
+      "functions": {
+        "web": {
+          "handler": "public/index.php",
+          "timeout": 28,
+          "layers": [
+            "arn:aws:lambda:us-east-1:534081306603:layer:php-83:63",
+            "arn:aws:lambda:us-east-1:534081306603:layer:php-83-fpm:63"
+          ],
+          "events": [
+            {
+              "httpApi": "*"
+            }
+          ],
+          "name": "cashfinito-api-production-web",
+          "runtime": "provided.al2"
+        },
+        "artisan": {
+          "handler": "artisan",
+          "timeout": 120,
+          "layers": [
+            "arn:aws:lambda:us-east-1:534081306603:layer:php-83:63",
+            "arn:aws:lambda:us-east-1:534081306603:layer:php-83-fpm:63",
+            "arn:aws:lambda:us-east-1:534081306603:layer:console:116"
+          ],
+          "events": [],
+          "name": "cashfinito-api-production-artisan",
+          "runtime": "provided.al2"
+        }
+      },
+      "plugins": [
+        "./vendor/bref/bref",
+        "serverless-lift"
+      ],
+      "custom": {
+        "lift": {
+          "constructs": {
+            "storage": {
+              "type": "storage"
+            }
+          }
+        }
+      }
+    },
+    "provider": {
+      "name": "aws",
+      "region": "us-east-1",
+      "stage": "production",
+      "runtime": "php-83",
+      "environment": {
+        "APP_ENV": "production",
+        "APP_DEBUG": "false",
+        "LOG_CHANNEL": "stderr",
+        "DB_CONNECTION": "pgsql",
+        "DB_HOST": "cashfinito-db.cczsy86o4obw.us-east-1.rds.amazonaws.com",
+        "DB_PORT": "5432",
+        "DB_DATABASE": "cashfinito",
+        "DB_USERNAME": "cashfinito_admin",
+        "DB_PASSWORD": "<REDACTED>",
+        "SESSION_DRIVER": "cookie",
+        "CACHE_DRIVER": "array",
+        "QUEUE_CONNECTION": "sync",
+        "DB_SSLMODE": "require"
+      },
+      "vpc": {
+        "securityGroupIds": [
+          "sg-086c7f561e12c80c9"
+        ],
+        "subnetIds": [
+          "subnet-0b157b83411316b98",
+          "subnet-0e6a86abea27530db"
+        ]
+      },
+      "versionFunctions": true,
+      "deploymentMethod": "direct"
+    },
+    "dashboard": {
+      "isEnabledForService": false,
+      "requiredAuthentication": false,
+      "orgFeaturesInUse": null,
+      "orgObservabilityIntegrations": null,
+      "serviceAppId": null,
+      "serviceProvider": null,
+      "instanceParameters": null
+    },
+    "serviceRawFile": "service: cashfinito-api\n\n# Set your team ID if you are using Bref Cloud\n#bref:\n#    team: my-team-id\n\nprovider:\n    name: aws\n    region: us-east-1\n    stage: production\n    runtime: php-83\n    environment:\n        APP_ENV: production\n        APP_DEBUG: false\n        LOG_CHANNEL: stderr\n        DB_CONNECTION: pgsql\n        DB_HOST: ${env:DB_HOST}\n        DB_PORT: ${env:DB_PORT}\n        DB_DATABASE: ${env:DB_DATABASE}\n        DB_USERNAME: ${env:DB_USERNAME}\n        DB_PASSWORD: ${env:DB_PASSWORD}\n        SESSION_DRIVER: cookie\n        CACHE_DRIVER: array\n        QUEUE_CONNECTION: sync\n        DB_SSLMODE: require\n    vpc:\n        securityGroupIds:\n            - ${env:SG_LAMBDA} # agregar al env\n        subnetIds:\n            - ${env:SUBNET_PRIVATE_1A}\n            - ${env:SUBNET_PRIVATE_1B}\n\npackage:\n    # Files and directories to exclude from deployment\n    patterns:\n        - '!node_modules/**'\n        - '!public/storage'\n        - '!resources/assets/**'\n        - '!resources/css/**'\n        - '!resources/images/**'\n        - '!resources/js/**'\n        - '!storage/**'\n        - '!tests/**'\n        - '!database/*.sqlite'\n        - '!.git/**'\n        # Exclude assets except for the manifest file\n        - '!public/build/**'\n        - 'public/build/manifest.json'\n        - 'php/**'\n\nfunctions:\n    # This function runs the Laravel website/API\n    web:\n        handler: public/index.php\n        timeout: 28 # in seconds (API Gateway has a timeout of 29 seconds)\n        layers:\n            - ${bref:layer.php-83-fpm}\n        events:\n            - httpApi: '*'\n\n    # This function lets us run artisan commands in Lambda\n    artisan:\n        handler: artisan\n        timeout: 120 # in seconds\n        layers:\n            - ${bref:layer.php-83-fpm}      # ← Capa base de PHP con extensiones\n            - ${bref:layer.console}      # ← Capa de consola\n\nplugins:\n    # We need to include the Bref plugin\n    - ./vendor/bref/bref\n    - serverless-lift\n\ncustom:\n    lift:\n        constructs:\n            storage:\n                type: storage",
+    "command": [
+      "deploy"
+    ],
+    "options": {},
+    "orgId": "567fe517-408a-4217-9938-1e80b655b83a",
+    "orgName": "devsecd",
+    "userId": "crgyKhw5ynl4SlkPLj",
+    "userName": "devsecd",
+    "serviceProviderAwsAccountId": "121284451239",
+    "serviceProviderAwsCfStackName": "cashfinito-api-production",
+    "serviceProviderAwsCfStackId": "arn:aws:cloudformation:us-east-1:121284451239:stack/cashfinito-api-production/91e070b0-bc31-11f0-8b56-1267743872bf",
+    "serviceProviderAwsCfStackCreated": "2025-11-07T23:29:13.674Z",
+    "serviceProviderAwsCfStackUpdated": "2025-11-10T23:45:06.137Z",
+    "serviceProviderAwsCfStackStatus": "UPDATE_COMPLETE",
+    "serviceProviderAwsCfStackOutputs": [
+      {
+        "OutputKey": "WebLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:121284451239:function:cashfinito-api-production-web:20",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-cashfinito-api-production-WebLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "HttpApiId",
+        "OutputValue": "4iyxastkcg",
+        "Description": "Id of the HTTP API",
+        "ExportName": "sls-cashfinito-api-production-HttpApiId"
+      },
+      {
+        "OutputKey": "ArtisanLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:121284451239:function:cashfinito-api-production-artisan:20",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-cashfinito-api-production-ArtisanLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "ServerlessDeploymentBucketName",
+        "OutputValue": "serverless-framework-deployments-us-east-1-e63606bd-1a9f",
+        "ExportName": "sls-cashfinito-api-production-ServerlessDeploymentBucketName"
+      },
+      {
+        "OutputKey": "HttpApiUrl",
+        "OutputValue": "https://4iyxastkcg.execute-api.us-east-1.amazonaws.com",
+        "Description": "URL of the HTTP API",
+        "ExportName": "sls-cashfinito-api-production-HttpApiUrl"
+      }
+    ],
+    "compiledCloudFormationTemplate": {
+      "AWSTemplateFormatVersion": "2010-09-09",
+      "Description": "The AWS CloudFormation template for this Serverless application",
+      "Resources": {
+        "WebLogGroup": {
+          "Type": "AWS::Logs::LogGroup",
+          "Properties": {
+            "LogGroupName": "/aws/lambda/cashfinito-api-production-web"
+          }
+        },
+        "ArtisanLogGroup": {
+          "Type": "AWS::Logs::LogGroup",
+          "Properties": {
+            "LogGroupName": "/aws/lambda/cashfinito-api-production-artisan"
+          }
+        },
+        "IamRoleLambdaExecution": {
+          "Type": "AWS::IAM::Role",
+          "Properties": {
+            "AssumeRolePolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Principal": {
+                    "Service": [
+                      "lambda.amazonaws.com"
+                    ]
+                  },
+                  "Action": [
+                    "sts:AssumeRole"
+                  ]
+                }
+              ]
+            },
+            "Policies": [
+              {
+                "PolicyName": {
+                  "Fn::Join": [
+                    "-",
+                    [
+                      "cashfinito-api",
+                      "production",
+                      "lambda"
+                    ]
+                  ]
+                },
+                "PolicyDocument": {
+                  "Version": "2012-10-17",
+                  "Statement": [
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "logs:CreateLogStream",
+                        "logs:CreateLogGroup",
+                        "logs:TagResource"
+                      ],
+                      "Resource": [
+                        {
+                          "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/cashfinito-api-production*:*"
+                        }
+                      ]
+                    },
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "logs:PutLogEvents"
+                      ],
+                      "Resource": [
+                        {
+                          "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/cashfinito-api-production*:*:*"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ],
+            "Path": "/",
+            "RoleName": {
+              "Fn::Join": [
+                "-",
+                [
+                  "cashfinito-api",
+                  "production",
+                  {
+                    "Ref": "AWS::Region"
+                  },
+                  "lambdaRole"
+                ]
+              ]
+            },
+            "ManagedPolicyArns": [
+              {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        "WebLambdaFunction": {
+          "Type": "AWS::Lambda::Function",
+          "Properties": {
+            "Code": {
+              "S3Bucket": "serverless-framework-deployments-us-east-1-e63606bd-1a9f",
+              "S3Key": "serverless/cashfinito-api/production/1762821474093-2025-11-11T00:37:54.093Z/cashfinito-api.zip"
+            },
+            "Handler": "public/index.php",
+            "Runtime": "provided.al2",
+            "FunctionName": "cashfinito-api-production-web",
+            "MemorySize": 1024,
+            "Timeout": 28,
+            "Environment": {
+              "Variables": {
+                "APP_ENV": "production",
+                "APP_DEBUG": "false",
+                "LOG_CHANNEL": "stderr",
+                "DB_CONNECTION": "pgsql",
+                "DB_HOST": "cashfinito-db.cczsy86o4obw.us-east-1.rds.amazonaws.com",
+                "DB_PORT": "5432",
+                "DB_DATABASE": "cashfinito",
+                "DB_USERNAME": "cashfinito_admin",
+                "DB_PASSWORD": "<REDACTED>",
+                "SESSION_DRIVER": "cookie",
+                "CACHE_DRIVER": "array",
+                "QUEUE_CONNECTION": "sync",
+                "DB_SSLMODE": "require"
+              }
+            },
+            "Role": {
+              "Fn::GetAtt": [
+                "IamRoleLambdaExecution",
+                "Arn"
+              ]
+            },
+            "VpcConfig": {
+              "SecurityGroupIds": [
+                "sg-086c7f561e12c80c9"
+              ],
+              "SubnetIds": [
+                "subnet-0b157b83411316b98",
+                "subnet-0e6a86abea27530db"
+              ]
+            },
+            "Layers": [
+              "arn:aws:lambda:us-east-1:534081306603:layer:php-83:63",
+              "arn:aws:lambda:us-east-1:534081306603:layer:php-83-fpm:63"
+            ]
+          },
+          "DependsOn": [
+            "WebLogGroup"
+          ]
+        },
+        "ArtisanLambdaFunction": {
+          "Type": "AWS::Lambda::Function",
+          "Properties": {
+            "Code": {
+              "S3Bucket": "serverless-framework-deployments-us-east-1-e63606bd-1a9f",
+              "S3Key": "serverless/cashfinito-api/production/1762821474093-2025-11-11T00:37:54.093Z/cashfinito-api.zip"
+            },
+            "Handler": "artisan",
+            "Runtime": "provided.al2",
+            "FunctionName": "cashfinito-api-production-artisan",
+            "MemorySize": 1024,
+            "Timeout": 120,
+            "Environment": {
+              "Variables": {
+                "APP_ENV": "production",
+                "APP_DEBUG": "false",
+                "LOG_CHANNEL": "stderr",
+                "DB_CONNECTION": "pgsql",
+                "DB_HOST": "cashfinito-db.cczsy86o4obw.us-east-1.rds.amazonaws.com",
+                "DB_PORT": "5432",
+                "DB_DATABASE": "cashfinito",
+                "DB_USERNAME": "cashfinito_admin",
+                "DB_PASSWORD": "<REDACTED>",
+                "SESSION_DRIVER": "cookie",
+                "CACHE_DRIVER": "array",
+                "QUEUE_CONNECTION": "sync",
+                "DB_SSLMODE": "require"
+              }
+            },
+            "Role": {
+              "Fn::GetAtt": [
+                "IamRoleLambdaExecution",
+                "Arn"
+              ]
+            },
+            "VpcConfig": {
+              "SecurityGroupIds": [
+                "sg-086c7f561e12c80c9"
+              ],
+              "SubnetIds": [
+                "subnet-0b157b83411316b98",
+                "subnet-0e6a86abea27530db"
+              ]
+            },
+            "Layers": [
+              "arn:aws:lambda:us-east-1:534081306603:layer:php-83:63",
+              "arn:aws:lambda:us-east-1:534081306603:layer:php-83-fpm:63",
+              "arn:aws:lambda:us-east-1:534081306603:layer:console:116"
+            ]
+          },
+          "DependsOn": [
+            "ArtisanLogGroup"
+          ]
+        },
+        "WebLambdaVersionC0mnScACUFtd24uaZt30rj1Fsb8mSpK9YFxcRYkiME": {
+          "Type": "AWS::Lambda::Version",
+          "DeletionPolicy": "Retain",
+          "Properties": {
+            "FunctionName": {
+              "Ref": "WebLambdaFunction"
+            },
+            "CodeSha256": "v7xFq6pSnaj5K8gxMN5Yd4ePUZyhqngpSBmgkg7OqXE="
+          }
+        },
+        "ArtisanLambdaVersionL67sQlTcuAO5TROwNC57HHzhDdy4qrDDCFHY1SE": {
+          "Type": "AWS::Lambda::Version",
+          "DeletionPolicy": "Retain",
+          "Properties": {
+            "FunctionName": {
+              "Ref": "ArtisanLambdaFunction"
+            },
+            "CodeSha256": "v7xFq6pSnaj5K8gxMN5Yd4ePUZyhqngpSBmgkg7OqXE="
+          }
+        },
+        "HttpApi": {
+          "Type": "AWS::ApiGatewayV2::Api",
+          "Properties": {
+            "Name": "production-cashfinito-api",
+            "ProtocolType": "HTTP"
+          }
+        },
+        "HttpApiStage": {
+          "Type": "AWS::ApiGatewayV2::Stage",
+          "Properties": {
+            "ApiId": {
+              "Ref": "HttpApi"
+            },
+            "StageName": "$default",
+            "AutoDeploy": true,
+            "DefaultRouteSettings": {
+              "DetailedMetricsEnabled": false
+            }
+          }
+        },
+        "WebLambdaPermissionHttpApi": {
+          "Type": "AWS::Lambda::Permission",
+          "Properties": {
+            "FunctionName": {
+              "Fn::GetAtt": [
+                "WebLambdaFunction",
+                "Arn"
+              ]
+            },
+            "Action": "lambda:InvokeFunction",
+            "Principal": "apigateway.amazonaws.com",
+            "SourceArn": {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:",
+                  {
+                    "Ref": "AWS::Partition"
+                  },
+                  ":execute-api:",
+                  {
+                    "Ref": "AWS::Region"
+                  },
+                  ":",
+                  {
+                    "Ref": "AWS::AccountId"
+                  },
+                  ":",
+                  {
+                    "Ref": "HttpApi"
+                  },
+                  "/*"
+                ]
+              ]
+            }
+          }
+        },
+        "HttpApiIntegrationWeb": {
+          "Type": "AWS::ApiGatewayV2::Integration",
+          "Properties": {
+            "ApiId": {
+              "Ref": "HttpApi"
+            },
+            "IntegrationType": "AWS_PROXY",
+            "IntegrationUri": {
+              "Fn::GetAtt": [
+                "WebLambdaFunction",
+                "Arn"
+              ]
+            },
+            "PayloadFormatVersion": "2.0",
+            "TimeoutInMillis": 30000
+          }
+        },
+        "HttpApiRouteDefault": {
+          "Type": "AWS::ApiGatewayV2::Route",
+          "Properties": {
+            "ApiId": {
+              "Ref": "HttpApi"
+            },
+            "RouteKey": "$default",
+            "Target": {
+              "Fn::Join": [
+                "/",
+                [
+                  "integrations",
+                  {
+                    "Ref": "HttpApiIntegrationWeb"
+                  }
+                ]
+              ]
+            }
+          },
+          "DependsOn": "HttpApiIntegrationWeb"
+        }
+      },
+      "Outputs": {
+        "ServerlessDeploymentBucketName": {
+          "Value": "serverless-framework-deployments-us-east-1-e63606bd-1a9f",
+          "Export": {
+            "Name": "sls-cashfinito-api-production-ServerlessDeploymentBucketName"
+          }
+        },
+        "WebLambdaFunctionQualifiedArn": {
+          "Description": "Current Lambda function version",
+          "Value": {
+            "Ref": "WebLambdaVersionC0mnScACUFtd24uaZt30rj1Fsb8mSpK9YFxcRYkiME"
+          },
+          "Export": {
+            "Name": "sls-cashfinito-api-production-WebLambdaFunctionQualifiedArn"
+          }
+        },
+        "ArtisanLambdaFunctionQualifiedArn": {
+          "Description": "Current Lambda function version",
+          "Value": {
+            "Ref": "ArtisanLambdaVersionL67sQlTcuAO5TROwNC57HHzhDdy4qrDDCFHY1SE"
+          },
+          "Export": {
+            "Name": "sls-cashfinito-api-production-ArtisanLambdaFunctionQualifiedArn"
+          }
+        },
+        "HttpApiId": {
+          "Description": "Id of the HTTP API",
+          "Value": {
+            "Ref": "HttpApi"
+          },
+          "Export": {
+            "Name": "sls-cashfinito-api-production-HttpApiId"
+          }
+        },
+        "HttpApiUrl": {
+          "Description": "URL of the HTTP API",
+          "Value": {
+            "Fn::Join": [
+              "",
+              [
+                "https://",
+                {
+                  "Ref": "HttpApi"
+                },
+                ".execute-api.",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ".",
+                {
+                  "Ref": "AWS::URLSuffix"
+                }
+              ]
+            ]
+          },
+          "Export": {
+            "Name": "sls-cashfinito-api-production-HttpApiUrl"
+          }
+        }
+      }
+    }
+  }
+}
