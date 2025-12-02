@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import apiClient from '@/api/axios'
+import { getCsrfCookie } from '@/api/axios'
 
 export const useAuthStore = defineStore('auth', () => {
     // State
@@ -19,6 +20,8 @@ export const useAuthStore = defineStore('auth', () => {
         error.value = null
 
         try {
+
+            await getCsrfCookie()
             const response = await apiClient.post('/auth/register', userData)
 
             token.value = response.data.access_token
@@ -42,6 +45,8 @@ export const useAuthStore = defineStore('auth', () => {
         error.value = null
 
         try {
+
+            await getCsrfCookie()    
             const response = await apiClient.post('/auth/login', credentials)
 
             token.value = response.data.access_token
@@ -130,6 +135,40 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
+    // Solicitar enlace de recuperación de contraseña
+    async function forgotPassword(email) {
+        loading.value = true
+        error.value = null
+
+        try {
+            await getCsrfCookie()
+            const response = await apiClient.post('/auth/password/email', { email })
+            return response.data
+        } catch (err) {
+            error.value = err.response?.data?.errors || { general: ['Error al solicitar recuperación'] }
+            throw err
+        } finally {
+            loading.value = false
+        }
+    }
+
+    // Resetear contraseña con token
+    async function resetPassword(resetData) {
+        loading.value = true
+        error.value = null
+
+        try {
+            await getCsrfCookie()
+            const response = await apiClient.post('/auth/password/reset', resetData)
+            return response.data
+        } catch (err) {
+            error.value = err.response?.data?.errors || { general: ['Error al restablecer contraseña'] }
+            throw err
+        } finally {
+            loading.value = false
+        }
+    }
+
     // Restaurar sesión desde localStorage
     function initAuth() {
         const savedToken  = localStorage.getItem('token')
@@ -159,6 +198,8 @@ export const useAuthStore = defineStore('auth', () => {
         fetchUser,
         updateProfile,
         updateCurrency,
+        forgotPassword,
+        resetPassword,
         initAuth
     }
 })

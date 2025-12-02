@@ -80,6 +80,16 @@ services:
     networks:
       - cashfinito-network
 
+  # Mailpit (servidor de correo para desarrollo)
+  mailpit:
+    container_name: cashfinito-mailpit
+    image: axllent/mailpit:latest
+    ports:
+      - "8025:8025"  # Interfaz web
+      - "1025:1025"  # SMTP
+    networks:
+      - cashfinito-network
+
 volumes:
   postgres_data:
 

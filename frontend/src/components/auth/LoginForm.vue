@@ -1,5 +1,5 @@
 <template>
-    <form @submit.prevent="handleSubmit" class="login-form">
+    <form @submit.prevent="handleSubmit" class="flex flex-col gap-6">
         <AppInput
             id="email"
             v-model="formData.email"
@@ -29,7 +29,7 @@
                 <button
                     type="button"
                     @click="togglePassword"
-                    class="password-toggle"
+                    class="bg-transparent border-none p-0 cursor-pointer text-gray-400 flex items-center transition-colors duration-200 hover:text-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
                     :disabled="loading"
                 >
                     <Eye v-if="showPassword" :size="20" />
@@ -38,17 +38,21 @@
             </template>
         </AppInput>
 
-        <div class="form-options">
-            <label class="remember-me">
+        <div class="flex justify-between items-center -mt-2">
+            <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
                 <input
                     type="checkbox"
                     v-model="formData.remember"
                     :disabled="loading"
+                    class="w-4 h-4 cursor-pointer"
                 />
                 <span>Recordarme</span>
             </label>
 
-            <router-link to="/forgot-password" class="forgot-link">
+            <router-link 
+                to="/forgot-password" 
+                class="text-sm text-purple-500 no-underline transition-colors duration-200 hover:text-purple-700 hover:underline"
+            >
                 ¿Olvidaste tu contraseña?
             </router-link>
         </div>
@@ -72,10 +76,13 @@
             {{ loading ? 'Iniciando sesión...' : 'Iniciar sesión' }}
         </AppButton>
 
-        <div class="form-footer">
-            <p>
+        <div class="text-center pt-4 border-t border-gray-200">
+            <p class="m-0 text-sm text-gray-600">
                 ¿No tienes cuenta?
-                <router-link to="/register" class="register-link">
+                <router-link 
+                    to="/register" 
+                    class="text-purple-500 no-underline font-medium transition-colors duration-200 hover:text-purple-700 hover:underline"
+                >
                     Regístrate aquí
                 </router-link>
             </p>
@@ -180,89 +187,3 @@ const handleSubmit = async () => {
     }
 }
 </script>
-
-<style scoped>
-.login-form {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-}
-
-.form-options {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: -0.5rem;
-}
-
-.remember-me {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.875rem;
-    color: #374151;
-    cursor: pointer;
-}
-
-.remember-me input[type="checkbox"] {
-    width: 1rem;
-    height: 1rem;
-    cursor: pointer;
-}
-
-.forgot-link {
-    font-size: 0.875rem;
-    color: #667eea;
-    text-decoration: none;
-    transition: color 0.2s;
-}
-
-.forgot-link:hover {
-    color: #764ba2;
-    text-decoration: underline;
-}
-
-.password-toggle {
-    background: none;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    color: #9ca3af;
-    display: flex;
-    align-items: center;
-    transition: color 0.2s;
-}
-
-.password-toggle:hover:not(:disabled) {
-    color: #667eea;
-}
-
-.password-toggle:disabled {
-    cursor: not-allowed;
-    opacity: 0.5;
-}
-
-.form-footer {
-    text-align: center;
-    padding-top: 1rem;
-    border-top: 1px solid #e5e7eb;
-}
-
-.form-footer p {
-    margin: 0;
-    font-size: 0.875rem;
-    color: #6b7280;
-}
-
-.register-link {
-    color: #667eea;
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.2s;
-}
-
-.register-link:hover {
-    color: #764ba2;
-    text-decoration: underline;
-}
-</style>

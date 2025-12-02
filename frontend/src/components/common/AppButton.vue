@@ -5,13 +5,12 @@
         :class="buttonClasses"
         @click="handleClick"
     >
-        <span v-if="loading" class="apinner"></span>
+        <span v-if="loading" class="inline-block w-4 h-4 border-2 border-transparent border-t-current rounded-full animate-spin"></span>
         <slot v-else />
     </button>
 </template>
 
-<script setup lang="ts">
-
+<script setup>
 import { computed } from 'vue';
 
 const props = defineProps({
@@ -45,14 +44,80 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['click'])
-const buttonClasses = computed(() => {
-    const base = 'btn'
-    const variant = `btn-${props.variant}`
-    const size = `btn-${props.size}`
-    const fullWidth = props.fullWidth ? 'btn-full' : ''
-    const disabled = props.disabled || props.loading ? 'btn-disabled' : ''
 
-    return [base, variant, size, fullWidth, disabled].filter(Boolean).join(' ')
+const buttonClasses = computed(() => {
+    const baseClasses = [
+        'inline-flex',
+        'items-center',
+        'justify-center',
+        'font-medium',
+        'transition-all',
+        'duration-200',
+        'cursor-pointer',
+        'border-none',
+        'outline-none',
+        'focus-visible:ring-2',
+        'focus-visible:ring-offset-2'
+    ]
+
+    // Sizes
+    const sizeClasses = {
+        sm: 'px-4 py-2 text-sm',
+        md: 'px-5 py-2.5 text-base',
+        lg: 'px-6 py-3 text-lg'
+    }
+
+    // Variants
+    const variantClasses = {
+        primary: [
+            'bg-gradient-to-br',
+            'from-purple-500',
+            'to-purple-700',
+            'text-white',
+            'hover:opacity-90',
+            'hover:-translate-y-0.5',
+            'hover:shadow-lg',
+            'hover:shadow-purple-500/40',
+            'focus-visible:ring-purple-500'
+        ],
+        secondary: [
+            'bg-gray-200',
+            'text-gray-700',
+            'hover:bg-gray-300',
+            'focus-visible:ring-gray-400'
+        ],
+        danger: [
+            'bg-red-500',
+            'text-white',
+            'hover:bg-red-600',
+            'focus-visible:ring-red-500'
+        ],
+        ghost: [
+            'bg-transparent',
+            'text-purple-500',
+            'border',
+            'border-gray-200',
+            'hover:bg-gray-50',
+            'hover:border-purple-500',
+            'focus-visible:ring-purple-500'
+        ]
+    }
+
+    const classes = [
+        ...baseClasses,
+        ...sizeClasses[props.size].split(' '),
+        ...variantClasses[props.variant]
+    ]
+
+    if (props.fullWidth) {
+        classes.push('w-full')
+    }
+
+    if (props.disabled || props.loading) {
+        classes.push('opacity-50', 'cursor-not-allowed', 'pointer-events-none')
+    }
+
+    return classes
 })
 
 const handleClick = (event) => {
@@ -60,107 +125,4 @@ const handleClick = (event) => {
         emit('click', event)
     }
 }
-
 </script>
-
-<style scoped>
-/* Base button styles */
-.btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 500;
-    border-radius: 0.5rem;
-    transition: all 0.2s;
-    cursor: pointer;
-    border: none;
-    outline: none;
-}
-
-.btn:focus-visible {
-    ring: 2px;
-    ring-offset: 2px;
-}
-
-/* Sizes */
-.btn-sm {
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
-}
-
-.btn-md {
-    padding: 0.625rem 1.25rem;
-    font-size: 1rem;
-}
-
-.btn-lg {
-    padding: 0.75rem 1.5rem;
-    font-size: 1.125rem;
-}
-
-/* Variants */
-.btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-}
-
-.btn-primary:hover:not(.btn-disabled) {
-    opacity: 0.9;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-
-.btn-secondary {
-    background: #e5e7eb;
-    color: #374151;
-}
-
-.btn-secondary:hover:not(.btn-disabled) {
-    background: #d1d5db;
-}
-
-.btn-danger {
-    background: #ef4444;
-    color: white;
-}
-
-.btn-danger:hover:not(.btn-disabled) {
-    background: #dc2626;
-}
-
-.btn-ghost {
-    background: transparent;
-    color: #667eea;
-    border: 1px solid #e5e7eb;
-}
-
-.btn-ghost:hover:not(.btn-disabled) {
-    background: #f9fafb;
-    border-color: #667eea;
-}
-
-/* States */
-.btn-disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.btn-full {
-    width: 100%;
-}
-
-/* Loading spinner */
-.spinner {
-    display: inline-block;
-    width: 1em;
-    height: 1em;
-    border: 2px solid transparent;
-    border-top-color: currentColor;
-    border-radius: 50%;
-    animation: spin 0.6s linear infinite;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-</style>

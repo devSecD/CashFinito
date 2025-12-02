@@ -7,6 +7,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "aws/aws-sdk-php": "^3.363",
         "bref/bref": "^2.4",
         "bref/extra-php-extensions": "^1.8",
         "bref/laravel-bridge": "^2.7",

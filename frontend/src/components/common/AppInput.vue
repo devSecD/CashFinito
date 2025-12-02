@@ -1,11 +1,11 @@
 <template>
-    <div class="input-group">
-        <label v-if="label" :for="id" class="input-label">
+    <div class="flex flex-col gap-2">
+        <label v-if="label" :for="id" class="text-sm font-medium text-gray-700">
             {{ label }}
-            <span v-if="required" class="required"></span>
+            <span v-if="required" class="text-red-500 ml-0.5">*</span>
         </label>
 
-        <div class="input-wrapper">
+        <div class="relative">
             <input 
                 :id="id" 
                 :type="type" 
@@ -17,12 +17,13 @@
                 @input="handleInput" 
                 @blur="handleBlur" 
             />
-            <div v-if="$slots.icon" class="input-icon">
+            <div v-if="$slots.icon" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-auto">
                 <slot name="icon" />
             </div>
         </div>
-        <p v-if="error" class="input-error">{{ error }}</p>
-        <p v-else-if="hint" class="input-hint">{{ hint }}</p>
+        
+        <p v-if="error" class="text-sm text-red-500 m-0">{{ error }}</p>
+        <p v-else-if="hint" class="text-sm text-gray-600 m-0">{{ hint }}</p>
     </div>
 </template>
 
@@ -62,7 +63,7 @@ const props = defineProps({
         type: Boolean,
         default: false
     }, 
-    require: {
+    required: {
         type: Boolean,
         default: false
     }
@@ -70,12 +71,43 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'blur'])
 
-const inputClasses = computed( () => {
-    const base = 'input'
-    const hasError = props.error ? 'input-error-state' : ''
-    const disabled = props.disabled ? 'input-disabled' : ''
+const inputClasses = computed(() => {
+    const baseClasses = [
+        'w-full',
+        'p-4', 
+        'text-base',
+        'border',
+        'outline-none',
+        'transition-all',
+        'duration-200',
+        'bg-white'
+    ]
 
-    return [base, hasError, disabled].filter(Boolean).join(' ')
+    if (props.error) {
+        baseClasses.push(
+            'border-red-500',
+            'focus:border-red-500',
+            'focus:ring-2',
+            'focus:ring-red-500/20'
+        )
+    } else {
+        baseClasses.push(
+            'border-gray-300',
+            'focus:border-purple-500',
+            'focus:ring-2',
+            'focus:ring-purple-500/20'
+        )
+    }
+
+    if (props.disabled) {
+        baseClasses.push(
+            'bg-gray-100',
+            'cursor-not-allowed',
+            'opacity-60'
+        )
+    }
+
+    return baseClasses
 })
 
 const handleInput = (event) => {
@@ -86,78 +118,3 @@ const handleBlur = (event) => {
     emit('blur', event)
 }
 </script>
-
-<style scoped>
-.input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.input-label {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: #374151;
-}
-
-.required {
-    color: #ef4444;
-    margin-left: 0.125rem;
-}
-
-.input-wrapper {
-    position: relative;
-}
-
-.input {
-    width: 100%;
-    padding: 0.625rem 0.875rem;
-    font-size: 1rem;
-    border: 1px solid #d1d5db;
-    border-radius: 0.5rem;
-    outline: none;
-    transition: all 0.2s;
-    background: white;
-}
-
-.input:focus {
-    border-color: #667eea;
-    ring: 2px;
-    ring-color: rgba(102, 126, 234, 0.2);
-}
-
-.input-error-state {
-    border-color: #ef4444;
-}
-
-.input-error-state:focus {
-    ring-color: rgba(239, 68, 68, 0.2);
-}
-
-.input-disabled {
-    background: #f3f4f6;
-    cursor: not-allowed;
-    opacity: 0.6;
-}
-
-.input-icon {
-    position: absolute;
-    right: 0.875rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #9ca3af;
-    pointer-events: none;
-}
-
-.input-error {
-    font-size: 0.875rem;
-    color: #ef4444;
-    margin: 0;
-}
-
-.input-hint {
-    font-size: 0.875rem;
-    color: #6b7280;
-    margin: 0;
-}
-</style>
