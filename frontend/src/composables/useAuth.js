@@ -1,7 +1,43 @@
 // frontend/src/composables/useAuth.js
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+
+
+export function usePasswordValidation() {
+    const password = ref('')
+    const confirmPassword = ref('')
+
+    const passwordRequirements = computed(() => ({
+        minLength: password.value.length >= 8,
+        hasUpperCase: /[A-Z]/.test(password.value),
+        hasLowerCase: /[a-z]/.test(password.value),
+        hasNumber: /\d/.test(password.value),
+        hasSpecialChar: /[!@#$%^&*(),.?":{}|<>]/.test(password.value)
+    }))
+
+    const passwordsMatch = computed(() => {
+        if (!confirmPassword.value) return true
+        return password.value === confirmPassword.value
+    })
+
+    const isPasswordValid = computed(() => {
+        return Object.values(passwordRequirements.value).every(req => req === true)
+    })
+
+    const canSubmit = computed(() => {
+        return isPasswordValid.value && passwordsMatch.value && password.value && confirmPassword.value
+    })
+
+    return {
+        password,
+        confirmPassword,
+        passwordRequirements,
+        passwordsMatch,
+        isPasswordValid,
+        canSubmit
+    }
+}
 
 export function useAuth() {
     const authStore = useAuthStore()
@@ -40,7 +76,6 @@ export function useAuth() {
 
     const logout = async () => {
     await authStore.logout()
-    router.push('/login')
     }
 
     const updateProfile = async (profileData) => {

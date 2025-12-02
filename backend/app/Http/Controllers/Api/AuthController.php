@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\UpdateProfileRequest;
+use App\Http\Requests\Auth\ChangePasswordRequest;
 use App\Http\Requests\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Auth\ResetPasswordRequest;
 use App\Http\Requests\Auth\SetCurrencyRequest;
@@ -16,7 +17,6 @@ use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Models\UserSetting;
 
-use Illuminate\Database\Eloquent\Attributes\UseResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -93,8 +93,13 @@ class AuthController extends Controller
      */
     public function logout(Request $request): JsonResponse 
     {
-        // Revocar token actual
-        $request->user()->currentAccessToken()->delete();
+        // Obtener el token actual
+        $currentToken = $request->user()->currentAccessToken();
+        
+        // Solo intentar eliminar si es un PersonalAccessToken real
+        if ($currentToken && !($currentToken instanceof \Laravel\Sanctum\TransientToken)) {
+            $currentToken->delete();
+        }
 
         return response()->json([
             'message' => 'Sesión cerrada exitosamente', 
@@ -118,11 +123,48 @@ class AuthController extends Controller
     {
         $user = $request->user();
 
-        $user->update($request->validated());
+        // Solo actualizar el nombre
+        $user->update([
+            'name' => $request->name
+        ]);
 
         return response()->json([
             'message' => 'Perfil actualizado exitosamente', 
             'user' => new UserResource($user->load('setting', 'setting.currency')),
+        ]);
+    }
+
+
+    /**
+     * Cambiar contraseña (requiere contraseña actual)
+     */
+    public function changePassword(ChangePasswordRequest $request): JsonResponse
+    {
+        $user = $request->user();
+
+        // Verificar contraseña actual
+        if (!Hash::check($request->current_password, $user->password)) {
+            throw ValidationException::withMessages([
+                'current_password' => ['La contraseña actual es incorrecta.']
+            ]);
+        }
+
+        // Actualizar contraseña
+        $user->update([
+            'password' => Hash::make($request->new_password)
+        ]);
+
+        // Opcional: Revocar todos los tokens excepto el actual
+        // Solo si el token actual es un PersonalAccessToken real
+        $currentToken = $user->currentAccessToken();
+        
+        if ($currentToken && !($currentToken instanceof \Laravel\Sanctum\TransientToken)) {
+            // Revocar todos los tokens excepto el actual
+            $user->tokens()->where('id', '!=', $currentToken->id)->delete();
+        }
+
+        return response()->json([
+            'message' => 'Contraseña actualizada exitosamente'
         ]);
     }
 
@@ -131,19 +173,27 @@ class AuthController extends Controller
      */
     public function forgotPassword(ForgotPasswordRequest $request): JsonResponse 
     {
-        $status = Password::sendResetLink(
-            $request->only('email')
-        );
+        try {
+            $status = Password::sendResetLink(
+                $request->only('email')
+            );
 
-        if ($status === Password::RESET_LINK_SENT) {
-            return response()->json([
-                'message' => 'Hemos enviado un enlace de recuperación a tu correo', 
+            if ($status === Password::RESET_LINK_SENT) {
+                return response()->json([
+                    'message' => 'Hemos enviado un enlace de recuperación a tu correo', 
+                ]);
+            }
+
+            throw ValidationException::withMessages([
+                'email' => [__($status)], 
             ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error al enviar el correo',
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
         }
-
-        throw ValidationException::withMessages([
-            'email' => [__($status)], 
-        ]);
     }
 
     /**

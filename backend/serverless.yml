@@ -23,6 +23,13 @@ provider:
         CACHE_DRIVER: array
         QUEUE_CONNECTION: sync
         DB_SSLMODE: require
+        MAIL_MAILER: ses
+        MAIL_FROM_ADDRESS: "no-reply@cashfinito.com"
+        MAIL_FROM_NAME: "CashFinito"
+        AWS_DEFAULT_REGION: ${env:AWS_DEFAULT_REGION}
+        AWS_ACCESS_KEY_ID: ${env:AWS_ACCESS_KEY_ID}
+        AWS_SECRET_ACCESS_KEY: ${env:AWS_SECRET_ACCESS_KEY}
+
     vpc:
         securityGroupIds:
             - ${env:SG_LAMBDA} # agregar al env

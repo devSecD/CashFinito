@@ -22,24 +22,15 @@ class UpdateProfileRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['sometimes', 'required', 'string', 'max:255'], 
-            'email' => [
-                'sometimes', 
-                'required', 
-                'email', 
-                'max:255', 
-                Rule::unique('users')->ignore($this->user()->id), 
-            ]
+            'name' => ['required', 'string', 'max:255'],
         ];
     }
 
     public function messages(): array 
     {
         return [
-            'name.required' => 'El nombre es obligatorio.', 
-            'email.required' => 'El correo electrónico es obligatorio.', 
-            'email.email' => 'El correo electrónico debe ser válido.', 
-            'email.unique' => 'Este correo ya está en uso.', 
+            'name.required' => 'El nombre es requerido',
+            'name.max' => 'El nombre no puede tener más de 255 caracteres',
         ];
     }
 }

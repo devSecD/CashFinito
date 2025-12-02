@@ -1,29 +1,35 @@
 <template>
-    <div class="select-group">
-        <label v-if="label" :for="id" class="select-label">
+    <div class="flex flex-col gap-2">
+        <label v-if="label" :for="id" class="text-sm font-semibold text-gray-700">
             {{ label }}
-            <span v-if="required" class="required">*</span>
+            <span v-if="required" class="text-red-500 ml-0.5">*</span>
         </label>
 
-        <select 
-            :id="id"
-            :value="modelValue"
-            :disabled="disabled"
-            :required="required"
-            :class="selectClasses"
-            @change="handleChange"
-        >
-            <option v-if="placeholder" value="" disabled>{{ placeholder }}</option>
-            <option 
-                v-for="option in options" 
-                :key="option[optionValue]" 
-                :value="option[optionValue]"
+        <div class="relative">
+            <select 
+                :id="id"
+                :value="modelValue"
+                :disabled="disabled"
+                :required="required"
+                :class="selectClasses"
+                @change="handleChange"
             >
-                {{ option[optionLabel] }}
-            </option>
-        </select>
-        <p v-if="error" class="select-error">{{ error }}</p>
-        <p v-else-if="hint" class="select-hint">{{ hint }}</p>
+                <option v-if="placeholder" value="" disabled>{{ placeholder }}</option>
+                <option 
+                    v-for="option in options" 
+                    :key="option[optionValue]" 
+                    :value="option[optionValue]"
+                >
+                    {{ option[optionLabel] }}
+                </option>
+            </select>
+            <div v-if="$slots.icon" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                <slot name="icon" />
+            </div>
+        </div>
+        
+        <p v-if="error" class="text-sm text-red-600 m-0 font-medium">{{ error }}</p>
+        <p v-else-if="hint" class="text-sm text-gray-500 m-0">{{ hint }}</p>
     </div>
 </template>
 
@@ -36,8 +42,8 @@ const props = defineProps({
         required: true
     }, 
     modelValue: {
-        type: String,
-        required: true
+        type: [String, Number],
+        default: ''
     }, 
     label: {
         type: String,
@@ -48,8 +54,8 @@ const props = defineProps({
         required: true
     }, 
     optionLabel: {
-        type: Array,
-        required: true
+        type: String,
+        default: 'label'
     }, 
     optionValue: {
         type: String,
@@ -79,78 +85,50 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 
-const selectClasses = computed( () => {
-    const base = 'select'
-    const hasError = props.error ? 'select-error-state' : ''
-    const disabled = props.disabled ? 'select-disabled' : ''
+const selectClasses = computed(() => {
+    const baseClasses = [
+        'w-full',
+        'px-4',
+        'py-3.5',
+        'text-base',
+        'border',
+        'rounded-xl',
+        'outline-none',
+        'transition-all',
+        'duration-200',
+        'bg-white',
+        'cursor-pointer',
+        'appearance-none'
+    ]
 
-    return [base, hasError, disabled].filter(Boolean).join(' ')
+    if (props.error) {
+        baseClasses.push(
+            'border-red-400',
+            'focus:border-red-500',
+            'focus:ring-4',
+            'focus:ring-red-100'
+        )
+    } else {
+        baseClasses.push(
+            'border-gray-300',
+            'focus:border-purple-500',
+            'focus:ring-4',
+            'focus:ring-purple-100'
+        )
+    }
+
+    if (props.disabled) {
+        baseClasses.push(
+            'bg-gray-50',
+            'cursor-not-allowed',
+            'opacity-60'
+        )
+    }
+
+    return baseClasses
 })
 
 const handleChange = (event) => {
     emit('update:modelValue', event.target.value)
 }
 </script>
-
-<style scoped>
-.select-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.select-label {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: #374151;
-}
-
-.required {
-    color: #ef4444;
-    margin-left: 0.125rem;
-}
-
-.select {
-    width: 100%;
-    padding: 0.625rem 0.875rem;
-    font-size: 1rem;
-    border: 1px solid #d1d5db;
-    border-radius: 0.5rem;
-    outline: none;
-    transition: all 0.2s;
-    background: white;
-    cursor: pointer;
-}
-
-.select:focus {
-    border-color: #667eea;
-    ring: 2px;
-    ring-color: rgba(102, 126, 234, 0.2);
-}
-
-.select-error-state {
-    border-color: #ef4444;
-}
-
-.select-error-state:focus {
-    ring-color: rgba(239, 68, 68, 0.2);
-}
-
-.select-disabled {
-    background: #f3f4f6;
-    cursor: not-allowed;
-    opacity: 0.6;
-}
-
-.select-error {
-    font-size: 0.875rem;
-    color: #ef4444;
-    margin: 0;
-}
-
-.select-hint {
-    font-size: 0.875rem;
-    color: #6b7280;
-    margin: 0;
-}
-</style>

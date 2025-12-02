@@ -1,7 +1,7 @@
 <template>
     <AuthLayout subtitle="Ingresa tu correo para recuperar tu contraseña">
         <AppCard variant="elevated">
-            <form @submit.prevent="handleSubmit" class="forgot-form">
+            <form @submit.prevent="handleSubmit" class="flex flex-col gap-6">
                 <AppAlert
                     v-if="successMessage"
                     type="success"
@@ -45,8 +45,11 @@
                     </AppButton>
                 </template>
 
-                <div class="form-footer">
-                    <router-link to="/login" class="back-link">
+                <div class="text-center pt-4 border-t border-gray-200">
+                    <router-link 
+                        to="/login" 
+                        class="inline-flex items-center gap-2 text-purple-500 no-underline text-sm font-medium transition-all duration-200 hover:text-purple-700 hover:gap-3"
+                    >
                         <ArrowLeft :size="16" />
                         <span>Volver al inicio de sesión</span>
                     </router-link>
@@ -55,7 +58,7 @@
         </AppCard>
 
         <template #footer>
-            <p class="footer-text">
+            <p class="text-sm m-0 opacity-90">
                 © 2024 CashFinito. Todos los derechos reservados.
             </p>
         </template>
@@ -104,7 +107,7 @@ const handleSubmit = async () => {
     successMessage.value = ''
 
     try {
-        await apiClient.post('/auth/forgot-password', {
+        await apiClient.post('/auth/password/email', {
             email: email.value
         })
 
@@ -116,39 +119,3 @@ const handleSubmit = async () => {
     }
 }
 </script>
-
-<style scoped>
-.forgot-form {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-}
-
-.form-footer {
-    text-align: center;
-    padding-top: 1rem;
-    border-top: 1px solid #e5e7eb;
-}
-
-.back-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: #667eea;
-    text-decoration: none;
-    font-size: 0.875rem;
-    font-weight: 500;
-    transition: all 0.2s;
-}
-
-.back-link:hover {
-    color: #764ba2;
-    gap: 0.75rem;
-}
-
-.footer-text {
-    font-size: 0.875rem;
-    margin: 0;
-    opacity: 0.9;
-}
-</style>

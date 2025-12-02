@@ -1,5 +1,5 @@
 <template>
-    <form @submit.prevent="handleSubmit" class="register-form">
+    <form @submit.prevent="handleSubmit" class="flex flex-col gap-6">
         <AppInput
             id="name"
             v-model="formData.name"
@@ -30,6 +30,23 @@
             </template>
         </AppInput>
 
+        <AppSelect
+            id="currency_id"
+            v-model="formData.currency_id"
+            label="Moneda"
+            :options="currencies"
+            option-label="name"
+            option-value="id"
+            placeholder="Selecciona tu moneda"
+            :error="errors.currency_id"
+            :disabled="loading || loadingCurrencies"
+            required
+        >
+            <template #icon>
+                <DollarSign :size="20" />
+            </template>
+        </AppSelect>
+
         <AppInput
             id="password"
             v-model="formData.password"
@@ -45,7 +62,7 @@
                 <button
                     type="button"
                     @click="togglePassword"
-                    class="password-toggle"
+                    class="bg-transparent border-none p-0 cursor-pointer text-gray-400 flex items-center transition-colors duration-200 hover:text-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
                     :disabled="loading"
                 >
                     <Eye v-if="showPassword" :size="20" />
@@ -68,7 +85,7 @@
                 <button
                     type="button"
                     @click="togglePasswordConfirm"
-                    class="password-toggle"
+                    class="bg-transparent border-none p-0 cursor-pointer text-gray-400 flex items-center transition-colors duration-200 hover:text-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
                     :disabled="loading"
                 >
                     <Eye v-if="showPasswordConfirm" :size="20" />
@@ -77,21 +94,26 @@
             </template>
         </AppInput>
 
-        <div class="terms-check">
-            <label class="terms-label">
+        <div class="-mt-2">
+            <label class="flex items-start gap-2 text-sm text-gray-700 cursor-pointer">
                 <input
                     type="checkbox"
                     v-model="formData.acceptTerms"
                     :disabled="loading"
+                    class="w-4 h-4 mt-0.5 cursor-pointer flex-shrink-0"
                 />
                 <span>
                     Acepto los 
-                    <a href="#" class="terms-link">términos y condiciones</a>
+                    <a href="#" class="text-purple-500 no-underline transition-colors duration-200 hover:text-purple-700 hover:underline">
+                        términos y condiciones
+                    </a>
                     y la 
-                    <a href="#" class="terms-link">política de privacidad</a>
+                    <a href="#" class="text-purple-500 no-underline transition-colors duration-200 hover:text-purple-700 hover:underline">
+                        política de privacidad
+                    </a>
                 </span>
             </label>
-            <p v-if="errors.acceptTerms" class="terms-error">
+            <p v-if="errors.acceptTerms" class="mt-2 ml-6 text-sm text-red-500 m-0">
                 {{ errors.acceptTerms }}
             </p>
         </div>
@@ -115,10 +137,13 @@
             {{ loading ? 'Registrando...' : 'Crear cuenta' }}
         </AppButton>
 
-        <div class="form-footer">
-            <p>
+        <div class="text-center pt-4 border-t border-gray-200">
+            <p class="m-0 text-sm text-gray-600">
                 ¿Ya tienes cuenta?
-                <router-link to="/login" class="login-link">
+                <router-link 
+                    to="/login" 
+                    class="text-purple-500 no-underline font-medium transition-colors duration-200 hover:text-purple-700 hover:underline"
+                >
                     Inicia sesión aquí
                 </router-link>
             </p>
@@ -127,20 +152,27 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useCurrenciesStore } from '@/stores/currencies';
 import { useAuthStore } from '@/stores/auth'
 import AppInput from '@/components/common/AppInput.vue'
 import AppButton from '@/components/common/AppButton.vue'
 import AppAlert from '@/components/common/AppAlert.vue'
-import { User, Mail, Eye, EyeOff } from 'lucide-vue-next'
+import AppSelect from '@/components/common/AppSelect.vue';
+import { User, Mail, Eye, EyeOff, DollarSign } from 'lucide-vue-next'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const currenciesStore = useCurrenciesStore();
+
+const currencies = ref([])
+const loadingCurrencies = ref(false)
 
 const formData = reactive({
     name: '',
     email: '',
+    currency_id: '',
     password: '',
     password_confirmation: '',
     acceptTerms: false
@@ -149,6 +181,7 @@ const formData = reactive({
 const errors = reactive({
     name: '',
     email: '',
+    currency_id: '',
     password: '',
     password_confirmation: '',
     acceptTerms: '',
@@ -167,12 +200,39 @@ const togglePasswordConfirm = () => {
     showPasswordConfirm.value = !showPasswordConfirm.value
 }
 
+// Cargar monedas al montar el componente
+onMounted(async () => {
+    await fetchCurrencies()
+})
+
+const fetchCurrencies = async () => {
+    loadingCurrencies.value = true
+
+    try {
+        const list = await currenciesStore.fetchCurrencies()
+
+        // AGREGADO: Guardar las monedas para mostrarlas en AppSelect
+        currencies.value = list
+
+        // AGREGADO: Seleccionar moneda por defecto (MXN)
+        formData.currency_id = currenciesStore.getDefaultCurrency()?.id || ''
+    }
+    catch (err) {
+        console.error('Error al cargar monedas:', err)
+        errors.general = 'Error al cargar las monedas disponibles'
+    }
+    finally {
+        loadingCurrencies.value = false
+    }
+}
+
 const validateForm = () => {
     let isValid = true
     
     // Reset errors
     errors.name = ''
     errors.email = ''
+    errors.currency_id = ''
     errors.password = ''
     errors.password_confirmation = ''
     errors.acceptTerms = ''
@@ -193,6 +253,12 @@ const validateForm = () => {
         isValid = false
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
         errors.email = 'El correo electrónico no es válido'
+        isValid = false
+    }
+
+    // Validar currency_id
+    if (!formData.currency_id) {
+        errors.currency_id = 'Debes seleccionar una moneda'
         isValid = false
     }
 
@@ -234,6 +300,7 @@ const handleSubmit = async () => {
         await authStore.register({
             name: formData.name,
             email: formData.email,
+            currency_id: formData.currency_id,
             password: formData.password,
             password_confirmation: formData.password_confirmation
         })
@@ -250,6 +317,9 @@ const handleSubmit = async () => {
             }
             if (backendErrors.email) {
                 errors.email = backendErrors.email[0]
+            }
+            if (backendErrors.currency_id) {
+                errors.currency_id = backendErrors.currency_id[0]
             }
             if (backendErrors.password) {
                 errors.password = backendErrors.password[0]
@@ -268,93 +338,3 @@ const handleSubmit = async () => {
     }
 }
 </script>
-
-<style scoped>
-.register-form {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-}
-
-.password-toggle {
-    background: none;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    color: #9ca3af;
-    display: flex;
-    align-items: center;
-    transition: color 0.2s;
-}
-
-.password-toggle:hover:not(:disabled) {
-    color: #667eea;
-}
-
-.password-toggle:disabled {
-    cursor: not-allowed;
-    opacity: 0.5;
-}
-
-.terms-check {
-    margin-top: -0.5rem;
-}
-
-.terms-label {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.5rem;
-    font-size: 0.875rem;
-    color: #374151;
-    cursor: pointer;
-}
-
-.terms-label input[type="checkbox"] {
-    width: 1rem;
-    height: 1rem;
-    margin-top: 0.125rem;
-    cursor: pointer;
-    flex-shrink: 0;
-}
-
-.terms-link {
-    color: #667eea;
-    text-decoration: none;
-    transition: color 0.2s;
-}
-
-.terms-link:hover {
-    color: #764ba2;
-    text-decoration: underline;
-}
-
-.terms-error {
-    margin: 0.5rem 0 0 1.5rem;
-    font-size: 0.875rem;
-    color: #ef4444;
-}
-
-.form-footer {
-    text-align: center;
-    padding-top: 1rem;
-    border-top: 1px solid #e5e7eb;
-}
-
-.form-footer p {
-    margin: 0;
-    font-size: 0.875rem;
-    color: #6b7280;
-}
-
-.login-link {
-    color: #667eea;
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.2s;
-}
-
-.login-link:hover {
-    color: #764ba2;
-    text-decoration: underline;
-}
-</style>

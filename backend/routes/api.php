@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CurrencyController;
 
 // Ruta de prueba
 Route::get('/health', function () {
@@ -21,6 +22,8 @@ Route::get('/health', function () {
 */
 
 // Rutas publicas (sin autenticación)
+Route::get('/currencies', [CurrencyController::class, 'index']);
+
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
@@ -34,6 +37,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/me', [AuthController::class, 'me']);
         Route::put('/profile', [AuthController::class, 'updateProfile']);
+        Route::post('/change-password', [AuthController::class, 'changePassword']); // Nueva ruta
         Route::post('/settings/currency', [AuthController::class, 'setCurrency']);
     });
 });
